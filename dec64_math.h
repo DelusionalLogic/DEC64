@@ -18,7 +18,7 @@ extern dec64 dec64_exp(dec64 exponent);
 extern dec64 dec64_factorial(dec64 x);
 extern dec64 dec64_log(dec64 x);
 extern dec64 dec64_raise(dec64 coefficient, dec64 exponent);
-extern dec64 dec64_random();
+extern dec64 dec64_random(void);
 extern void  dec64_seed(dec64 seed);
 extern dec64 dec64_sin(dec64 radians);
 extern dec64 dec64_root(dec64 degree, dec64 radicand);

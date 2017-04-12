@@ -91,7 +91,7 @@ false   equ 280h
 ; Sometimes multiplication by a magic number can be faster than and as
 ; accurate as division.
 
-eight_over_ten equ -3689348814741910323
+eight_over_ten equ [eot]
 
 public dec64_abs;(number: dec64)
 ;   returns absolution: dec64
@@ -215,7 +215,7 @@ r1_w    equ cx
 
 ; This has not yet been tested on Unix.
 
-UNIX    equ 0                   ; calling convention: 0 for Windows, 1 for Unix
+UNIX    equ 1                   ; calling convention: 0 for Windows, 1 for Unix
 
 function_with_one_parameter macro
     if UNIX
@@ -322,6 +322,15 @@ dec64_exponent: function_with_one_parameter
 
     pad; -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
+ultimate:
+	qword 36028797018963967 ; Ultimate -1
+	qword 3602879701896396800 ; Ultimate * 100
+	qword 360287970189639679 ; Ultimate * 10 - 1
+
+eot:
+	qword -3689348814741910323
+
+
 dec64_new: function_with_two_parameters
 ;(coefficient: int64, exponent: int64) returns number: dec64
 
@@ -357,18 +366,18 @@ pack:
 ;    negative_extreme_coefficent = -(extreme_coefficent + 1)
 
     mov     r10,r0          ; r10 is the coefficient
-    mov     r1,3602879701896396800 ; the ultimate coefficient * 100
+    mov     r1,[ultimate+8] ; the ultimate coefficient * 100
     not     r10             ; r10 is -coefficient
     xor     r11,r11         ; r11 is zero
     test    r10,r10         ; look at the sign bit
     cmovs   r10,r0          ; r10 is the absolute value of the coefficient
     cmp     r10,r1          ; compare with the actual coefficient
     jae     pack_large      ; deal with the very large coefficient
-    mov     r1,36028797018963967 ; the ultimate coefficient - 1
+    mov     r1, [ultimate]  ; the ultimate coefficient - 1
     mov     r9,-127         ; r9 is the ultimate exponent
     cmp     r1,r10          ; compare with the actual coefficient
     adc     r11,0           ; add 1 to r11 if 1 digit too big
-    mov     r1,360287970189639679 ; the ultimate coefficient * 10 - 1
+    mov     r1,[ultimate+16] ; the ultimate coefficient * 10 - 1
     sub     r9,r8           ; r9 is the difference from the actual exponent
     cmp     r1,r10          ; compare with the actual coefficient
     adc     r11,0           ; add 1 to r11 if 2 digits too big
@@ -832,6 +841,9 @@ floor_remains:
     shl     r0,8            ; pack the coefficient
     ret
 
+some_val:
+	qword 80000000000000H
+
     pad; -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 dec64_subtract: function_with_two_parameters
@@ -860,7 +872,7 @@ dec64_subtract: function_with_two_parameters
     movsx   r8,r1_b         ; r8 is the first exponent
     sar     r10,8
     movsx   r9,r2_b         ; r9 is the second exponent
-    mov     r11,80000000000000H ; r11 is 36028797018963968
+    mov     r11, [some_val] ; r11 is 36028797018963968
     mov     r0,r10          ; r0 is the first coefficient
     cmp     r8,r9           ; if the second exponent is larger, swap
     jge     subtract_slower_decrease_compare
